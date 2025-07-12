@@ -19,7 +19,7 @@ type httpbinGetResponse[T any] struct {
 	Args    T                 `json:"args"`
 	Headers map[string]string `json:"headers"`
 	Origin  string            `json:"origin"`
-	Url     string            `json:"url"`
+	URL     string            `json:"url"`
 }
 
 type httpbinPostResponse struct {
@@ -27,7 +27,7 @@ type httpbinPostResponse struct {
 	Data    string            `json:"data"`
 	Headers map[string]string `json:"headers"`
 	Origin  string            `json:"origin"`
-	Url     string            `json:"url"`
+	URL     string            `json:"url"`
 }
 
 type httpbinPostFormResponse[T any] struct {
@@ -36,14 +36,14 @@ type httpbinPostFormResponse[T any] struct {
 	Files map[string]string `json:"files"`
 }
 
-type httpbinPostJsonResponse[T any] struct {
+type httpbinPostJSONResponse[T any] struct {
 	httpbinPostResponse
-	Json T `json:"json"`
+	JSON T `json:"json"`
 }
 
 func TestHttpbin_Get(t *testing.T) {
 	u, _ := url.JoinPath(httpbinEndpoint, "get")
-	resp, err := jsonc.NewRequest[*httpbinGetResponse[any]]().Get(context.Background(), u)
+	resp, err := jsonc.NewRequest[httpbinGetResponse[any]]().Get(context.Background(), u)
 	assert.NoError(t, err)
 	assert.NotNil(t, resp)
 }
@@ -121,7 +121,7 @@ func TestHttpbin_GetQuery(t *testing.T) {
 	assert.Len(t, resp.Args.Scores, 3)
 	assert.NotEmpty(t, resp.Headers)
 	assert.NotEmpty(t, resp.Origin)
-	u2, _ := url.Parse(resp.Url)
+	u2, _ := url.Parse(resp.URL)
 	u2.RawQuery = ""
 	assert.Equal(t, u, u2.String())
 	assert.Contains(t, resp.Headers["User-Agent"], "Go-http-client/2.0")
@@ -150,7 +150,7 @@ func TestHttpbin_GetQuery2(t *testing.T) {
 	assert.Len(t, resp.Args.Scores, 3)
 	assert.NotEmpty(t, resp.Headers)
 	assert.NotEmpty(t, resp.Origin)
-	u2, _ := url.Parse(resp.Url)
+	u2, _ := url.Parse(resp.URL)
 	u2.RawQuery = ""
 	assert.Equal(t, u, u2.String())
 	assert.Contains(t, resp.Headers["User-Agent"], "Go-http-client/2.0")
@@ -172,7 +172,7 @@ func TestHttpbin_PostForm(t *testing.T) {
 	assert.Len(t, resp.Form.Scores, 3)
 	assert.NotEmpty(t, resp.Headers)
 	assert.NotEmpty(t, resp.Origin)
-	assert.Equal(t, u, resp.Url)
+	assert.Equal(t, u, resp.URL)
 	assert.Contains(t, resp.Headers["User-Agent"], "Go-http-client/2.0")
 }
 
@@ -195,7 +195,7 @@ func TestHttpbin_PostFileUpload(t *testing.T) {
 	assert.Len(t, resp.Files, 2)
 	assert.NotEmpty(t, resp.Headers)
 	assert.NotEmpty(t, resp.Origin)
-	assert.Equal(t, u, resp.Url)
+	assert.Equal(t, u, resp.URL)
 	assert.Contains(t, resp.Headers["User-Agent"], "Go-http-client/2.0")
 }
 
@@ -211,15 +211,15 @@ func TestHttpbin_PostJson(t *testing.T) {
 		Age:    25,
 		Scores: []int{100, 90, 80},
 	}
-	resp, err := jsonc.NewRequest[httpbinPostJsonResponse[params]]().PostJson(context.Background(), u, p)
+	resp, err := jsonc.NewRequest[httpbinPostJSONResponse[params]]().PostJSON(context.Background(), u, p)
 	assert.NoError(t, err)
 	assert.NotNil(t, resp)
-	assert.Equal(t, "Jane Doe", resp.Json.Name)
-	assert.Equal(t, 25, resp.Json.Age)
-	assert.Len(t, resp.Json.Scores, 3)
-	assert.Equal(t, []int{100, 90, 80}, resp.Json.Scores)
+	assert.Equal(t, "Jane Doe", resp.JSON.Name)
+	assert.Equal(t, 25, resp.JSON.Age)
+	assert.Len(t, resp.JSON.Scores, 3)
+	assert.Equal(t, []int{100, 90, 80}, resp.JSON.Scores)
 	assert.NotEmpty(t, resp.Headers)
 	assert.NotEmpty(t, resp.Origin)
-	assert.Equal(t, u, resp.Url)
+	assert.Equal(t, u, resp.URL)
 	assert.Contains(t, resp.Headers["User-Agent"], "Go-http-client/2.0")
 }

@@ -127,7 +127,7 @@ func TestHttpbin_GetQuery(t *testing.T) {
 	assert.Contains(t, resp.Headers["User-Agent"], "Go-http-client/2.0")
 }
 
-func TestHttpbin_GetQuery2(t *testing.T) {
+func TestHttpbin_GetQuery_NullableString(t *testing.T) {
 	u, _ := url.JoinPath(httpbinEndpoint, "get")
 	empty := ""
 	p := params{
@@ -185,7 +185,7 @@ func TestHttpbin_PostFileUpload(t *testing.T) {
 	}
 	resp, err := jsonc.NewRequest[httpbinPostFormResponse[params]]().Post(context.Background(), u, p,
 		form.Bytes("data1", "data1.txt", []byte("This is data1 content.")),
-		form.File("data2", "samples/dummy.pdf"))
+		form.File("data2", "testdata/samples/dummy.pdf"))
 	assert.NoError(t, err)
 	assert.NotNil(t, resp)
 	assert.Equal(t, "Jane Doe", resp.Form.Name)
@@ -193,13 +193,15 @@ func TestHttpbin_PostFileUpload(t *testing.T) {
 	assert.Len(t, resp.Form.Scores, 3)
 	assert.Equal(t, []int{100, 90, 80}, resp.Form.Scores)
 	assert.Len(t, resp.Files, 2)
+	assert.Equal(t, "This is data1 content.", resp.Files["data1"])
+	assert.Len(t, resp.Files["data2"], 17725)
 	assert.NotEmpty(t, resp.Headers)
 	assert.NotEmpty(t, resp.Origin)
 	assert.Equal(t, u, resp.URL)
 	assert.Contains(t, resp.Headers["User-Agent"], "Go-http-client/2.0")
 }
 
-func TestHttpbin_PostJson(t *testing.T) {
+func TestHttpbin_PostJSON(t *testing.T) {
 	u, _ := url.JoinPath(httpbinEndpoint, "post")
 	type params struct {
 		Name   string `json:"name"`

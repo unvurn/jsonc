@@ -1,18 +1,25 @@
 package jsonc
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"strings"
 
 	"github.com/unvurn/httpc"
 )
 
+type Request[T any] struct {
+	httpc.Request[T]
+}
+
 // NewRequest HTTPリクエストを生成
 //
 // defaultRespondersを使用してHTTPリクエストを生成します。
-func NewRequest[T any]() *httpc.Request[T] {
-	return httpc.NewRequestFunc[T](jsonResponder)
+func NewRequest[T any]() *Request[T] {
+	return &Request[T]{*httpc.NewRequestFunc[T](jsonResponder)}
 }
 
 // jsonResponder JSONレスポンスをデコードするレスポンダー関数
@@ -33,4 +40,15 @@ func jsonResponder[T any](res *http.Response) (T, error) {
 	}
 
 	return response, nil
+}
+
+func (r *Request[T]) PostJSON(ctx context.Context, u string, params any) (T, error) {
+	return r.DoFunc(ctx, http.MethodPost, u, "application/json", func() (io.Reader, error) {
+		var buf bytes.Buffer
+		if err := json.NewEncoder(&buf).Encode(params); err != nil {
+			return nil, err
+		}
+
+		return &buf, nil
+	})
 }

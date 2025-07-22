@@ -108,7 +108,7 @@ func TestHttpbin_PostForm(t *testing.T) {
 		Age:    25,
 		Scores: []int{100, 90, 80},
 	}
-	resp, err := jsonc.NewRequest[httpbinPostFormResponse[params]]().Post(context.Background(), u, p)
+	resp, err := jsonc.NewRequest[httpbinPostFormResponse[params]]().PostForm(context.Background(), u, p)
 	assert.NoError(t, err)
 	assert.NotNil(t, resp)
 	assert.Equal(t, "Jane Doe", resp.Form.Name)
@@ -129,7 +129,7 @@ func TestHttpbin_PostFileUpload(t *testing.T) {
 		Age:    25,
 		Scores: []int{100, 90, 80},
 	}
-	resp, err := jsonc.NewRequest[httpbinPostFormResponse[params]]().Post(context.Background(), u, p,
+	resp, err := jsonc.NewRequest[httpbinPostFormResponse[params]]().PostForm(context.Background(), u, p,
 		form.Bytes("data1", "data1.txt", []byte("This is data1 content.")),
 		form.File("data2", "testdata/samples/dummy.pdf"))
 	assert.NoError(t, err)
@@ -159,7 +159,7 @@ func TestHttpbin_PostJSON(t *testing.T) {
 		Age:    25,
 		Scores: []int{100, 90, 80},
 	}
-	resp, err := jsonc.NewRequest[httpbinPostJSONResponse[params]]().PostJSON(context.Background(), u, p)
+	resp, err := jsonc.NewRequest[httpbinPostJSONResponse[params]]().Post(context.Background(), u, p)
 	assert.NoError(t, err)
 	assert.NotNil(t, resp)
 	assert.Equal(t, "Jane Doe", resp.JSON.Name)

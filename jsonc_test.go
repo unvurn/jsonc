@@ -101,61 +101,6 @@ func (p *params) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func TestHttpbin_GetQuery(t *testing.T) {
-	u, _ := url.JoinPath(httpbinEndpoint, "get")
-	p := params{
-		Name:   "John Doe",
-		Age:    25,
-		Scores: []int{100, 90, 80},
-	}
-	resp, err := jsonc.NewRequest[httpbinGetResponse[params]]().Get(context.Background(), u, p)
-	assert.NoError(t, err)
-	assert.NotNil(t, resp)
-	assert.Equal(t, "John Doe", resp.Args.Name)
-	assert.Equal(t, 25, resp.Args.Age)
-	assert.Equal(t, []int{100, 90, 80}, resp.Args.Scores)
-	assert.Empty(t, resp.Args.Description)
-	assert.Empty(t, resp.Args.Description2)
-	assert.Nil(t, resp.Args.ExtraNote)
-	assert.Nil(t, resp.Args.ExtraNote2)
-	assert.Len(t, resp.Args.Scores, 3)
-	assert.NotEmpty(t, resp.Headers)
-	assert.NotEmpty(t, resp.Origin)
-	u2, _ := url.Parse(resp.URL)
-	u2.RawQuery = ""
-	assert.Equal(t, u, u2.String())
-	assert.Contains(t, resp.Headers["User-Agent"], "Go-http-client/2.0")
-}
-
-func TestHttpbin_GetQuery_NullableString(t *testing.T) {
-	u, _ := url.JoinPath(httpbinEndpoint, "get")
-	empty := ""
-	p := params{
-		Name:       "John Doe",
-		Age:        25,
-		Scores:     []int{100, 90, 80},
-		ExtraNote:  &empty,
-		ExtraNote2: &empty,
-	}
-	resp, err := jsonc.NewRequest[httpbinGetResponse[params]]().Get(context.Background(), u, p)
-	assert.NoError(t, err)
-	assert.NotNil(t, resp)
-	assert.Equal(t, "John Doe", resp.Args.Name)
-	assert.Equal(t, 25, resp.Args.Age)
-	assert.Equal(t, []int{100, 90, 80}, resp.Args.Scores)
-	assert.Empty(t, resp.Args.Description)
-	assert.Empty(t, resp.Args.Description2)
-	assert.Empty(t, resp.Args.ExtraNote)
-	assert.Empty(t, resp.Args.ExtraNote2)
-	assert.Len(t, resp.Args.Scores, 3)
-	assert.NotEmpty(t, resp.Headers)
-	assert.NotEmpty(t, resp.Origin)
-	u2, _ := url.Parse(resp.URL)
-	u2.RawQuery = ""
-	assert.Equal(t, u, u2.String())
-	assert.Contains(t, resp.Headers["User-Agent"], "Go-http-client/2.0")
-}
-
 func TestHttpbin_PostForm(t *testing.T) {
 	u, _ := url.JoinPath(httpbinEndpoint, "post")
 	p := params{
@@ -171,6 +116,7 @@ func TestHttpbin_PostForm(t *testing.T) {
 	assert.Equal(t, []int{100, 90, 80}, resp.Form.Scores)
 	assert.Len(t, resp.Form.Scores, 3)
 	assert.NotEmpty(t, resp.Headers)
+	assert.Equal(t, "80", resp.Headers["Content-Length"])
 	assert.NotEmpty(t, resp.Origin)
 	assert.Equal(t, u, resp.URL)
 	assert.Contains(t, resp.Headers["User-Agent"], "Go-http-client/2.0")

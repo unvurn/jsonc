@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"strings"
 
 	"github.com/unvurn/httpc"
 )
@@ -19,22 +18,15 @@ type Request[T any] struct {
 //
 // defaultRespondersを使用してHTTPリクエストを生成します。
 func NewRequest[T any]() *Request[T] {
-	return &Request[T]{*httpc.NewRequestFunc[T](jsonResponder)}
+	return &Request[T]{*httpc.NewRequest[T]().Decoder("application/json", jsonDecoder[T])}
 }
 
 // jsonResponder JSONレスポンスをデコードするレスポンダー関数
-//
-// HTTPレスポンスのContent-Typeヘッダーが"application/json"を含む場合に動作します。
-func jsonResponder[T any](res *http.Response) (T, error) {
+func jsonDecoder[T any](data []byte) (T, error) {
 	var zero T
-	if res.StatusCode != http.StatusOK || !strings.Contains(res.Header.Get("Content-Type"), "application/json") {
-		return zero, nil
-	}
-
-	decoder := json.NewDecoder(res.Body)
 
 	var response T
-	err := decoder.Decode(&response)
+	err := json.Unmarshal(data, &response)
 	if err != nil {
 		return zero, err
 	}
@@ -43,7 +35,8 @@ func jsonResponder[T any](res *http.Response) (T, error) {
 }
 
 func (r *Request[T]) PostJSON(ctx context.Context, u string, params any) (T, error) {
-	return r.DoFunc(ctx, http.MethodPost, u, "application/json", func() (io.Reader, error) {
+	var zero T
+	response, err := r.DoFunc(ctx, http.MethodPost, u, "application/json", func() (io.Reader, error) {
 		var buf bytes.Buffer
 		if err := json.NewEncoder(&buf).Encode(params); err != nil {
 			return nil, err
@@ -51,4 +44,13 @@ func (r *Request[T]) PostJSON(ctx context.Context, u string, params any) (T, err
 
 		return &buf, nil
 	})
+	if err != nil {
+		return zero, err
+	}
+	var v T
+	err = response.As(&v)
+	if err != nil {
+		return zero, err
+	}
+	return v, nil
 }
